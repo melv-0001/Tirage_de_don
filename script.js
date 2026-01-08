@@ -19,7 +19,7 @@ const cartes = [
 // ----------------------
 // URL du Google Sheet Web App
 // ----------------------
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwmebZVpuRcak2GfIsC1-8fwvmPYxTA9oB1xAY_CIIJXg09Xn8zMSIb5CEbrw3Gu7Xn/exec"; 
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/library/d/1lAEXLdBBKaU8EXjENC-Llaq40aKyPXN0ijdsRQfZxsrIp8qcZ2amI7xL/1"; 
 
 // ----------------------
 // Normalisation pour clé unique

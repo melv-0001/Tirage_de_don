@@ -34,6 +34,7 @@ function normalize(text) {
 function envoyerTirageSheet(nom, classe, carte) {
   fetch(GOOGLE_SHEET_URL, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       nom: nom,
       classe: classe,
@@ -45,6 +46,7 @@ function envoyerTirageSheet(nom, classe, carte) {
   .then(data => console.log("Tirage envoyé :", data))
   .catch(err => console.error("Erreur envoi tirage :", err));
 }
+
 
 // ----------------------
 // Fonction principale : tirer une carte

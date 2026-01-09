@@ -4,15 +4,14 @@
   <meta charset="UTF-8">
   <title>Admin - Tirages</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-light">
+
 <script>
   const PASSWORD = "Elleamangédupouletcesoir";
-
   const userPass = prompt("Entrez le mot de passe admin :");
-
   if (userPass !== PASSWORD) {
     alert("Accès refusé");
     window.location.href = "index.html";
@@ -21,8 +20,6 @@
 
 <div class="container mt-5">
   <h2 class="text-center mb-4">Historique des tirages</h2>
-
-
   <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead class="table-dark">
@@ -36,33 +33,57 @@
       <tbody id="tableBody"></tbody>
     </table>
   </div>
-
-  <button class="btn btn-danger mt-3" onclick="viderDonnees()">
-    Vider les données
-  </button>
+  <button class="btn btn-danger mt-3" onclick="viderDonnees()">Vider les données</button>
 </div>
 
 <script>
-  const tableBody = document.getElementById("tableBody");
-  const tirages = JSON.parse(localStorage.getItem("tirages")) || [];
+  // 🔹 REMPLACE PAR TES INFOS SUPABASE
+  const SUPABASE_URL = 'https://tvqnamntcspmbggldziw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2cW5hbW50Y3NwbWJnZ2xkeml3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NzE0NDAsImV4cCI6MjA4MzU0NzQ0MH0.zk4-Rilmh-Vj3lwWVyCGU7oLBcoTn3caoQJ_dFAWvQk';
 
-  tirages.forEach(t => {
-    tableBody.innerHTML += `
-      <tr>
-        <td>${t.nom}</td>
-        <td>${t.classe}</td>
-        <td><span class="badge bg-success">${t.carte}</span></td>
-        <td>${t.date}</td>
-      </tr>
-    `;
-  });
+// Utiliser le SDK global fourni par le CDN
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  function viderDonnees() {
+  async function loadTirages() {
+    const { data: tirages, error } = await supabaseClient
+      .from("tirage")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      alert("Erreur lors du chargement des tirages !");
+      return;
+    }
+
+    const tableBody = document.getElementById("tableBody");
+    tableBody.innerHTML = "";
+    tirages.forEach(t => {
+      tableBody.innerHTML += `
+        <tr>
+          <td>${t.nom}</td>
+          <td>${t.classe}</td>
+          <td><span class="badge bg-success">${t.carte}</span></td>
+          <td>${new Date(t.created_at).toISOString()}</td>
+        </tr>
+      `;
+    });
+  }
+
+  async function viderDonnees() {
     if (confirm("Voulez-vous vraiment supprimer toutes les données ?")) {
-      localStorage.removeItem("tirages");
-      location.reload();
+      const { error } = await supabaseClient.from("tirage").delete().neq("id", 0);
+      if (error) {
+        console.error(error);
+        alert("Erreur lors de la suppression !");
+      } else {
+        loadTirages();
+      }
     }
   }
+
+  // Charger les tirages au démarrage
+  loadTirages();
 </script>
 
 </body>

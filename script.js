@@ -1,57 +1,17 @@
-// ----------------------
-// Liste des cartes
-// ----------------------
-const cartes = [
-  "5 Sachets d'Omo",
-  "5 Sachets de Milo",
-  "Brosse à dent + Dentifrice",
-  "1 Paquet de sucre roux",
-  "4 Sachets de lait en poudre",
-  "5 Spaghettis",
-  "1 Boite de petits pois",
-  "1 L de Javel",
-  "3 Sachet de vermicelles",
-  "5 Kg de riz",
-  "2 Boites de bonnet rouge",
-  "2 Sachets de savon",
-];
+// Tes infos Supabase
+const SUPABASE_URL = 'https://tvqnamntcspmbggldziw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2cW5hbW50Y3NwbWJnZ2xkeml3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NzE0NDAsImV4cCI6MjA4MzU0NzQ0MH0.zk4-Rilmh-Vj3lwWVyCGU7oLBcoTn3caoQJ_dFAWvQk';
 
-// ----------------------
-// URL du Google Sheet Web App
-// ----------------------
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwmebZVpuRcak2GfIsC1-8fwvmPYxTA9oB1xAY_CIIJXg09Xn8zMSIb5CEbrw3Gu7Xn/exec"; 
+// Utiliser le SDK global fourni par le CDN
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ----------------------
 // Normalisation pour clé unique
-// ----------------------
 function normalize(text) {
   return text.toLowerCase().trim().replace(/\s+/g, "");
 }
 
-// ----------------------
-// Envoi des tirages vers Google Sheets
-// ----------------------
-function envoyerTirageSheet(nom, classe, carte) {
-  fetch(GOOGLE_SHEET_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nom: nom,
-      classe: classe,
-      carte: carte,
-      date: new Date().toLocaleString()
-    }),
-  })
-  .then(res => res.json())
-  .then(data => console.log("Tirage envoyé :", data))
-  .catch(err => console.error("Erreur envoi tirage :", err));
-}
-
-
-// ----------------------
-// Fonction principale : tirer une carte
-// ----------------------
-function tirerCarte() {
+// Fonction globale
+window.tirerCarte = async function() {
   const nomInput = document.getElementById("nom");
   const classeInput = document.getElementById("classe");
   const resultat = document.getElementById("resultat");
@@ -60,14 +20,14 @@ function tirerCarte() {
   const nom = normalize(nomInput.value);
   const classe = normalize(classeInput.value);
 
-  if (!nom || !classe) {
-    alert("Veuillez remplir tous les champs");
-    return;
+  if (!nom || !classe) { 
+    alert("Remplissez tous les champs"); 
+    return; 
   }
 
   const userKey = `user_${nom}_${classe}`;
 
-  // Vérification tirage unique
+  // 🔒 Vérifier si déjà tiré localement
   if (localStorage.getItem(userKey)) {
     resultat.textContent = "❌ Vous avez déjà tiré une carte";
     resultat.className = "mt-4 fs-5 text-danger fw-bold";
@@ -75,44 +35,45 @@ function tirerCarte() {
     return;
   }
 
-  // Tirage aléatoire
+  // 🎴 Tirage aléatoire
+  const cartes = [
+    "5 Sachets d'Omo",
+    "5 Sachets de Milo",
+    "Brosse à dent + Dentifrice",
+    "1 Paquet de sucre roux",
+    "4 Sachets de lait en poudre",
+    "5 Spaghettis",
+    "1 Boite de petits pois",
+    "1 L de Javel",
+    "3 Sachet de vermicelles",
+    "5 Kg de riz",
+    "2 Boites de bonnet rouge",
+    "2 Sachets de savon",
+  ];
   const carte = cartes[Math.floor(Math.random() * cartes.length)];
+
+  // 🔹 Affichage immédiat
   resultat.textContent = carte;
   resultat.className = "mt-4 fs-3 text-success fw-bold";
 
-  // Marquer l'utilisateur comme ayant tiré
+  // 🔹 Marquer comme déjà tiré localement
   localStorage.setItem(userKey, "true");
-
-  // Envoi vers Google Sheets
-  envoyerTirageSheet(nomInput.value.trim(), classeInput.value.trim(), carte);
-
-  // Désactiver le bouton
   bouton.disabled = true;
-}
 
-// ----------------------
-// vérifier au chargement si l'utilisateur a déjà tiré
-// ----------------------
-window.onload = () => {
-  const nomInput = document.getElementById("nom");
-  const classeInput = document.getElementById("classe");
-  const resultat = document.getElementById("resultat");
-  const bouton = document.querySelector("button");
+  // 🔹 Enregistrement dans Supabase
+  try {
+    const { data, error } = await supabaseClient
+      .from("tirage")
+      .insert([{ nom: nomInput.value.trim(), classe: classeInput.value.trim(), carte }]);
 
-  function verifierTirage() {
-    const nom = normalize(nomInput.value);
-    const classe = normalize(classeInput.value);
-    const userKey = `user_${nom}_${classe}`;
-
-    if (localStorage.getItem(userKey)) {
-      resultat.textContent = "❌ Vous avez déjà tiré une carte";
-      resultat.className = "mt-4 fs-5 text-danger fw-bold";
-      bouton.disabled = true;
+    if (error) {
+      console.error("Erreur Supabase :", error);
+      alert("Erreur lors de l'enregistrement côté Supabase ! (Vérifie RLS / table tirage)");
     } else {
-      bouton.disabled = false;
+      console.log("Tirage enregistré :", data);
     }
+  } catch (err) {
+    console.error("Erreur fetch :", err);
+    alert("Impossible de contacter Supabase !");
   }
-
-  nomInput.addEventListener("input", verifierTirage);
-  classeInput.addEventListener("input", verifierTirage);
 };

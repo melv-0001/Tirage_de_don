@@ -44,4 +44,14 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-     
+  deploy-to-render:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: push_to_registry
+    steps:
+      - name: Deploy to Render
+        uses: render-examples/deploy-to-render@v1.0.0
+        with:
+          api_key: rnd_kW1IBeIMlLyyweiBtWptGi1TRbuL #${{ secrets.RENDER_API_KEY }}
+          service_id: srv-d6hd46ngi27c73foiblg #${{ secrets.RENDER_SERVICE_ID }}
+          image: melv0001/Tirage:latest

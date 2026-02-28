@@ -52,6 +52,6 @@ jobs:
       - name: Deploy to Render
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          api_key: rnd_kW1IBeIMlLyyweiBtWptGi1TRbuL #${{ secrets.RENDER_API_KEY }}
-          service_id: srv-d6hd46ngi27c73foiblg #${{ secrets.RENDER_SERVICE_ID }}
+          api-key: rnd_kW1IBeIMlLyyweiBtWptGi1TRbuL #${{ secrets.RENDER_API_KEY }}
+          service-id: srv-d6hd46ngi27c73foiblg #${{ secrets.RENDER_SERVICE_ID }}
           image: melv0001/Tirage:latest
